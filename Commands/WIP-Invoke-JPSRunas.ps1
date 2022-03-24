@@ -27,8 +27,6 @@ Function Invoke-JPSRunas {
     .PARAMETER ShowUI
     What exe block should be run
 
-
-
     .EXAMPLE
     PS> 
     
