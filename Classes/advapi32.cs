@@ -179,6 +179,154 @@ namespace Pinvoke {
       public LUID_AND_ATTRIBUTES [] Privileges;
     }
 
+    enum TOKEN_INFORMATION_CLASS
+    {
+        /// <summary>
+        /// The buffer receives a TOKEN_USER structure that contains the user account of the token.
+        /// </summary>
+        TokenUser = 1,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_GROUPS structure that contains the group accounts associated with the token.
+        /// </summary>
+        TokenGroups,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_PRIVILEGES structure that contains the privileges of the token.
+        /// </summary>
+        TokenPrivileges,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_OWNER structure that contains the default owner security identifier (SID) for newly created objects.
+        /// </summary>
+        TokenOwner,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_PRIMARY_GROUP structure that contains the default primary group SID for newly created objects.
+        /// </summary>
+        TokenPrimaryGroup,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_DEFAULT_DACL structure that contains the default DACL for newly created objects.
+        /// </summary>
+        TokenDefaultDacl,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_SOURCE structure that contains the source of the token. TOKEN_QUERY_SOURCE access is needed to retrieve this information.
+        /// </summary>
+        TokenSource,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_TYPE value that indicates whether the token is a primary or impersonation token.
+        /// </summary>
+        TokenType,
+
+        /// <summary>
+        /// The buffer receives a SECURITY_IMPERSONATION_LEVEL value that indicates the impersonation level of the token. If the access token is not an impersonation token, the function fails.
+        /// </summary>
+        TokenImpersonationLevel,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_STATISTICS structure that contains various token statistics.
+        /// </summary>
+        TokenStatistics,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_GROUPS structure that contains the list of restricting SIDs in a restricted token.
+        /// </summary>
+        TokenRestrictedSids,
+
+        /// <summary>
+        /// The buffer receives a DWORD value that indicates the Terminal Services session identifier that is associated with the token.
+        /// </summary>
+        TokenSessionId,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_GROUPS_AND_PRIVILEGES structure that contains the user SID, the group accounts, the restricted SIDs, and the authentication ID associated with the token.
+        /// </summary>
+        TokenGroupsAndPrivileges,
+
+        /// <summary>
+        /// Reserved.
+        /// </summary>
+        TokenSessionReference,
+
+        /// <summary>
+        /// The buffer receives a DWORD value that is nonzero if the token includes the SANDBOX_INERT flag.
+        /// </summary>
+        TokenSandBoxInert,
+
+        /// <summary>
+        /// Reserved.
+        /// </summary>
+        TokenAuditPolicy,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_ORIGIN value.
+        /// </summary>
+        TokenOrigin,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_ELEVATION_TYPE value that specifies the elevation level of the token.
+        /// </summary>
+        TokenElevationType,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_LINKED_TOKEN structure that contains a handle to another token that is linked to this token.
+        /// </summary>
+        TokenLinkedToken,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_ELEVATION structure that specifies whether the token is elevated.
+        /// </summary>
+        TokenElevation,
+
+        /// <summary>
+        /// The buffer receives a DWORD value that is nonzero if the token has ever been filtered.
+        /// </summary>
+        TokenHasRestrictions,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_ACCESS_INFORMATION structure that specifies security information contained in the token.
+        /// </summary>
+        TokenAccessInformation,
+
+        /// <summary>
+        /// The buffer receives a DWORD value that is nonzero if virtualization is allowed for the token.
+        /// </summary>
+        TokenVirtualizationAllowed,
+
+        /// <summary>
+        /// The buffer receives a DWORD value that is nonzero if virtualization is enabled for the token.
+        /// </summary>
+        TokenVirtualizationEnabled,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_MANDATORY_LABEL structure that specifies the token's integrity level.
+        /// </summary>
+        TokenIntegrityLevel,
+
+        /// <summary>
+        /// The buffer receives a DWORD value that is nonzero if the token has the UIAccess flag set.
+        /// </summary>
+        TokenUIAccess,
+
+        /// <summary>
+        /// The buffer receives a TOKEN_MANDATORY_POLICY structure that specifies the token's mandatory integrity policy.
+        /// </summary>
+        TokenMandatoryPolicy,
+
+        /// <summary>
+        /// The buffer receives the token's logon security identifier (SID).
+        /// </summary>
+        TokenLogonSid,
+
+        /// <summary>
+        /// The maximum value for this enumeration
+        /// </summary>
+        MaxTokenInfoClass
+    }
+
     public static class advapi32 {
 
       [DllImport("advapi32.dll", SetLastError = true, PreserveSig = true)]
@@ -219,13 +367,16 @@ namespace Pinvoke {
         IntPtr buffer
       );
 
-      [DllImport("advapi32.dll")]
-      public extern static bool DuplicateToken(
-          IntPtr ExistingTokenHandle, int
-          SECURITY_IMPERSONATION_LEVEL,
-          ref IntPtr DuplicateTokenHandle
+      [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
+      public static extern bool AdjustTokenPrivileges(
+          IntPtr TokenHandle, 
+          bool disall,
+          ref TokPriv1Luid newst,
+          int len, 
+          IntPtr prev, 
+          IntPtr relen
       );
-
+      
       [DllImport("advapi32.dll", CharSet=CharSet.Auto, SetLastError=true)]
       public extern static bool DuplicateTokenEx(
           IntPtr hExistingToken,
@@ -242,7 +393,46 @@ namespace Pinvoke {
           IntPtr ProcessHandle, 
           UInt32 DesiredAccess, 
           out IntPtr TokenHandle
-      );
+          );
+      
+      [DllImport("advapi32.dll", SetLastError=true)]
+      static extern bool GetTokenInformation(
+          IntPtr TokenHandle,
+          TOKEN_INFORMATION_CLASS TokenInformationClass,
+          IntPtr TokenInformation,
+          uint TokenInformationLength,
+          out uint ReturnLength
+          );
+
+      //http://pinvoke.net/default.aspx/advapi32.GetTokenInformation
+      [DllImport("advapi32.dll", SetLastError = true)]
+      static extern Boolean SetTokenInformation(
+        IntPtr TokenHandle, 
+        TOKEN_INFORMATION_CLASS TokenInformationClass,
+        ref UInt32 TokenInformation, 
+        UInt32 TokenInformationLength
+        );
+
+      [DllImport("advapi32.dll", SetLastError=true)]
+      static extern bool CheckTokenMembership(
+        IntPtr TokenHandle, 
+        IntPtr SidToCheck, 
+        out bool IsMember);
+
+      [DllImport("advapi32.dll", SetLastError=true, CharSet=CharSet.Unicode)]
+      static extern bool CreateProcessAsUser(
+          IntPtr hToken,
+          string lpApplicationName,
+          string lpCommandLine,
+          ref SECURITY_ATTRIBUTES lpProcessAttributes,
+          ref SECURITY_ATTRIBUTES lpThreadAttributes,
+          bool bInheritHandles,
+          uint dwCreationFlags,
+          IntPtr lpEnvironment,
+          string lpCurrentDirectory,
+          ref StartupInfo lpStartupInfo,
+          out ProcessInformation lpProcessInformation
+          );
 
       [DllImport("advapi32.dll", SetLastError=true, CharSet=CharSet.Unicode)]
       public static extern bool CreateProcessWithLogonW(
@@ -252,10 +442,10 @@ namespace Pinvoke {
           LogonFlags         logonFlags,
           String             applicationName,
           String             commandLine,
-          CreationFlags          creationFlags,
+          CreationFlags      creationFlags,
           UInt32             environment,
           String             currentDirectory,
-          ref  StartupInfo       startupInfo,
+          ref  StartupInfo   startupInfo,
           out ProcessInformation     processInformation);
 
       [DllImport("advapi32.dll", SetLastError=true)]
@@ -271,6 +461,7 @@ namespace Pinvoke {
           IntPtr pdwProfileLength, // nullable
           IntPtr pQuotaLimits // nullable
           );
+
       [DllImport("advapi32.dll", SetLastError=true)]  
       public static extern bool ImpersonateLoggedOnUser(
         IntPtr hToken
@@ -278,33 +469,17 @@ namespace Pinvoke {
       
       [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
 		  public static extern int RevertToSelf();
-      
-    [DllImport("advapi32.dll", SetLastError=true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetThreadToken(
-        IntPtr PHThread,
-        IntPtr Token
-    );
+    
 
+      [DllImport("advapi32.dll", SetLastError = true)]
+      public static extern bool LookupPrivilegeValue(
+          string host, 
+          string name, 
+          ref long pluid
+      );
 
-    [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool LookupPrivilegeValue(
-        string host, 
-        string name, 
-        ref long pluid
-    );
+      [DllImport("kernel32.dll", ExactSpelling = true)]
+      public static extern IntPtr GetCurrentProcess();
+  }
 
-    [DllImport("kernel32.dll", ExactSpelling = true)]
-    public static extern IntPtr GetCurrentProcess();
-
-    [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
-    public static extern bool AdjustTokenPrivileges(
-        IntPtr htok, 
-        bool disall,
-        ref TokPriv1Luid newst,
-        int len, 
-        IntPtr prev, 
-        IntPtr relen
-    );
-    }
 }
