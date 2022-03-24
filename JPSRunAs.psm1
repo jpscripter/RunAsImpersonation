@@ -3,20 +3,15 @@ if (Test-Path -Path $PSScriptRoot\Classes\){
     Foreach($CLS in $Class){
 	    Write-Verbose -Message "Class File: $CLS"  
 	    $Content = Get-Content -raw -path $CLS
-	try{
-        	Add-Type -TypeDefinition $Content
-	}
-	catch {
-		Write-Verbose -Message "Class File: $CLS -with Unsafe"  
+	    Write-Verbose -Message "Class File: $CLS -with Unsafe"  
         if ($PSVersionTable.PSVersion.Major -lt 6){
-                    $cp = New-Object System.CodeDom.Compiler.CompilerParameters
-                    $cp.CompilerOptions = '/unsafe'
-			        $Options = @{CompilerParameters =  $cp}
-		        }else{
-			        $Options = @{CompilerOptions =  '/unsafe'}
-		        }
+            $cp = New-Object System.CodeDom.Compiler.CompilerParameters
+            $cp.CompilerOptions = '/unsafe'
+            $Options = @{CompilerParameters =  $cp}
+        }else{
+            $Options = @{CompilerOptions =  '/unsafe'}
+        }
         Add-Type -TypeDefinition $Content @Options
-	    }
     }
 }
 
