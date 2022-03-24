@@ -278,5 +278,33 @@ namespace Pinvoke {
       
       [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
 		  public static extern int RevertToSelf();
+      
+    [DllImport("advapi32.dll", SetLastError=true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetThreadToken(
+        IntPtr PHThread,
+        IntPtr Token
+    );
+
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern bool LookupPrivilegeValue(
+        string host, 
+        string name, 
+        ref long pluid
+    );
+
+    [DllImport("kernel32.dll", ExactSpelling = true)]
+    public static extern IntPtr GetCurrentProcess();
+
+    [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
+    public static extern bool AdjustTokenPrivileges(
+        IntPtr htok, 
+        bool disall,
+        ref TokPriv1Luid newst,
+        int len, 
+        IntPtr prev, 
+        IntPtr relen
+    );
     }
 }
