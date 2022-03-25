@@ -14,14 +14,11 @@ Function Invoke-JPSRunas {
 
     .PARAMETER Token
     what token should be used to run the script block
-    
-    .PARAMETER AsConsoleUser
-    Should we run this as the currently logged on user
 
-    .PARAMETER Parameters
+    .PARAMETER Binary
     a hash table of the parameters you want to pass into your scriptblock
     
-    .PARAMETER CMD
+    .PARAMETER CommandLine
     What exe block should be run
     
     .PARAMETER ShowUI
@@ -33,6 +30,7 @@ Function Invoke-JPSRunas {
     
     .LINK
     http://www.JPScripter.com
+    https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessasuserw
     
     #>
         param(  
@@ -42,8 +40,10 @@ Function Invoke-JPSRunas {
             [Switch]$NetOnly,
             [Parameter(ParameterSetName = "Token")]
             [intptr]$Token = 0,
-            [scriptblock]$ScriptBlock,
-            [hashtable]$Parameters
+            [System.IO.FileInfo]$Binary = $env:ComSpec,
+            [string]$Parameters,
+            [switch] $ShowUI
+
         )
         Begin{
             $LogonType = [Pinvoke.dwLogonType]::Interactive
@@ -53,14 +53,36 @@ Function Invoke-JPSRunas {
             }
         }
         Process {
-            $ParamHash = [Hashtable]::Synchronized(@{
-                args = $Parameters
-            })
-            [Func[object]] $Func = {
-                [hashtable] $ScriptArgs= $ParamHash['args']
-                . $scriptblock @ScriptArgs
-            }
-            [System.Security.Principal.WindowsIdentity]::RunImpersonated($token,$func)
+            
+            $ProcessAttributes = New-Object Pinvoke.SECURITY_ATTRIBUTES
+            $ProcessAttributes.nLength = [System.Runtime.InteropServices.Marshal]::sizeOf($ProcessAttributes)
+            $ThreadAttributes = New-Object Pinvoke.SECURITY_ATTRIBUTES
+            $ThreadAttributes.nLength =  [System.Runtime.InteropServices.Marshal]::sizeOf($ProcessAttributes)
+
+            #Start Info
+            $StartInfo = New-Object Pinvoke.StartupInfo
+            $StartInfo.flags = 0x00000001
+            $StartInfo.showWindow = 0x0000
+            if ($ShowUI.IsPresent){$StartInfo.showWindow = 0x0001}
+            $StartInfo.cb = [System.Runtime.InteropServices.Marshal]::sizeOf($StartInfo)
+
+            $ProcessInfo = New-Object Pinvoke.ProcessInformation
+
+            [intptr] $pToken = 0
+            $SecurityAttibutes = New-object pinvoke.SECURITY_ATTRIBUTES
+            $SecurityAttibutes.nLength = [System.Runtime.InteropServices.Marshal]::SizeOf($SecurityAttibutes)
+            $status = [Pinvoke.advapi32]::DuplicateTokenEx($mToken,
+                 [System.Security.Principal.TokenAccessLevels]::MaximumAllowed, 
+                 [ref] $SecurityAttibutes, 
+                 [pinvoke.SECURITY_IMPERSONATION_LEVEL]::SecurityImpersonation, 
+                 [pinvoke.TOKEN_TYPE]::TokenPrimary, 
+                 [ref] $pToken)
+
+            [intptr]$envptr = 0
+            $s = [Pinvoke.userenv]::CreateEnvironmentBlock([ref]$envptr, $pToken, $false)
+
+            7
+            [System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()
         }
         End {
     
