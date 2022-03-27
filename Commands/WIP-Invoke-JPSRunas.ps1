@@ -54,34 +54,24 @@ Function Invoke-JPSRunas {
         }
         Process {
             
-            $ProcessAttributes = New-Object Pinvoke.SECURITY_ATTRIBUTES
-            $ProcessAttributes.nLength = [System.Runtime.InteropServices.Marshal]::sizeOf($ProcessAttributes)
-            $ThreadAttributes = New-Object Pinvoke.SECURITY_ATTRIBUTES
-            $ThreadAttributes.nLength =  [System.Runtime.InteropServices.Marshal]::sizeOf($ProcessAttributes)
-
-            #Start Info
-            $StartInfo = New-Object Pinvoke.StartupInfo
-            $StartInfo.flags = 0x00000001
-            $StartInfo.showWindow = 0x0000
-            if ($ShowUI.IsPresent){$StartInfo.showWindow = 0x0001}
-            $StartInfo.cb = [System.Runtime.InteropServices.Marshal]::sizeOf($StartInfo)
-
-            $ProcessInfo = New-Object Pinvoke.ProcessInformation
-
             [intptr] $pToken = 0
             $SecurityAttibutes = New-object pinvoke.SECURITY_ATTRIBUTES
             $SecurityAttibutes.nLength = [System.Runtime.InteropServices.Marshal]::SizeOf($SecurityAttibutes)
-            $status = [Pinvoke.advapi32]::DuplicateTokenEx($mToken,
+            $status = [Pinvoke.advapi32]::DuplicateTokenEx($Token,
                  [System.Security.Principal.TokenAccessLevels]::MaximumAllowed, 
                  [ref] $SecurityAttibutes, 
-                 [pinvoke.SECURITY_IMPERSONATION_LEVEL]::SecurityImpersonation, 
+                 [pinvoke.SECURITY_IMPERSONATION_LEVEL]::SecurityIdentification, 
                  [pinvoke.TOKEN_TYPE]::TokenPrimary, 
                  [ref] $pToken)
 
-            [intptr]$envptr = 0
-            $s = [Pinvoke.userenv]::CreateEnvironmentBlock([ref]$envptr, $pToken, $false)
-
-            7
+            [Pinvoke.advapi32]::LaunchProcessAsToken(
+                $Binary,
+                $Parameters,
+                $ShowUI.IsPresent,
+                $pToken,
+                [intptr]::Zero
+            )
+                        
             [System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()
         }
         End {

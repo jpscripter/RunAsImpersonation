@@ -22,7 +22,7 @@ http://www.JPScripter.com/extension.html
 
 #>
 param(
-    [uint]$Session
+    [int]$Session
 )
     Begin{
         #Check for admin

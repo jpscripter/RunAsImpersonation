@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Pinvoke {
-    public enum ProcessPrivilege : int
+    public enum TokenPrivilege : int
     {
-        SE_PRIVILEGE_ENABLED = 0x00000002,
         TOKEN_QUERY = 0x00000008,
         TOKEN_ADJUST_PRIVILEGES = 0x00000020
     }
@@ -24,10 +24,10 @@ namespace Pinvoke {
         TOKEN_ADJUST_GROUPS = 0x0040,
         TOKEN_ADJUST_DEFAULT = 0x0080,
         TOKEN_ADJUST_SESSIONID = 0x0100,
-        TOKEN_READ = (StandardRights.STANDARD_RIGHTS_READ | ProcessPrivilege.TOKEN_QUERY),
+        TOKEN_READ = (StandardRights.STANDARD_RIGHTS_READ | TokenPrivilege.TOKEN_QUERY),
         TOKEN_ALL_ACCESS = (StandardRights.STANDARD_RIGHTS_REQUIRED | TokenRights.TOKEN_ASSIGN_PRIMARY |
-          TokenRights.TOKEN_DUPLICATE | TokenRights.TOKEN_IMPERSONATE | ProcessPrivilege.TOKEN_QUERY | TokenRights.TOKEN_QUERY_SOURCE |
-          ProcessPrivilege.TOKEN_ADJUST_PRIVILEGES | TokenRights.TOKEN_ADJUST_GROUPS | TokenRights.TOKEN_ADJUST_DEFAULT |
+          TokenRights.TOKEN_DUPLICATE | TokenRights.TOKEN_IMPERSONATE | TokenPrivilege.TOKEN_QUERY | TokenRights.TOKEN_QUERY_SOURCE |
+          TokenPrivilege.TOKEN_ADJUST_PRIVILEGES | TokenRights.TOKEN_ADJUST_GROUPS | TokenRights.TOKEN_ADJUST_DEFAULT |
           TokenRights.TOKEN_ADJUST_SESSIONID)
     }
 
@@ -41,6 +41,42 @@ namespace Pinvoke {
         SecurityIdentification,
         SecurityImpersonation,
         SecurityDelegation
+    }
+    public enum Process_Privilege {
+      SeAssignPrimaryTokenPrivilege,
+      SeAuditPrivilege,
+      SeBackupPrivilege,
+      SeChangeNotifyPrivilege,
+      SeCreateGlobalPrivilege,
+      SeCreatePagefilePrivilege,
+      SeCreatePermanentPrivilege,
+      SeCreateSymbolicLinkPrivilege,
+      SeCreateTokenPrivilege,
+      SeDebugPrivilege,
+      SeEnableDelegationPrivilege,
+      SeImpersonatePrivilege,
+      SeIncreaseBasePriorityPrivilege,
+      SeIncreaseQuotaPrivilege,
+      SeIncreaseWorkingSetPrivilege,
+      SeLoadDriverPrivilege,
+      SeLockMemoryPrivilege,
+      SeMachineAccountPrivilege,
+      SeManageVolumePrivilege,
+      SeProfileSingleProcessPrivilege,
+      SeRelabelPrivilege,
+      SeRemoteShutdownPrivilege,
+      SeRestorePrivilege,
+      SeSecurityPrivilege,
+      SeShutdownPrivilege,
+      SeSyncAgentPrivilege,
+      SeSystemEnvironmentPrivilege,
+      SeSystemProfilePrivilege,
+      SeSystemtimePrivilege,
+      SeTakeOwnershipPrivilege,
+      SeTcbPrivilege,
+      SeTimeZonePrivilege,
+      SeTrustedCredManAccessPrivilege,
+      SeUndockPrivilege
     }
 
     public enum LSA_AccessPolicy : long
@@ -60,7 +96,7 @@ namespace Pinvoke {
       POLICY_NOTIFICATION = 0x00001000L
     }
 
-    public enum CreationFlags 
+    public enum CreationFlags : int
     {
       CREATE_SUSPENDED       = 0x00000004,
       CREATE_NEW_CONSOLE     = 0x00000010,
@@ -230,6 +266,13 @@ namespace Pinvoke {
           IntPtr relen
       );
       
+      [DllImport("advapi32.dll", SetLastError = true)]
+      public extern static bool DuplicateToken(
+          IntPtr ExistingTokenHandle, int
+          SECURITY_IMPERSONATION_LEVEL,
+          ref IntPtr DuplicateTokenHandle
+      );
+
       [DllImport("advapi32.dll", CharSet=CharSet.Auto, SetLastError=true)]
       public extern static bool DuplicateTokenEx(
           IntPtr hExistingToken,
@@ -248,6 +291,13 @@ namespace Pinvoke {
           out IntPtr TokenHandle
           );
 
+      [DllImport("advapi32.dll", SetLastError=true)]
+      [return: MarshalAs(UnmanagedType.Bool)]
+      public static extern bool SetThreadToken(
+          IntPtr PHThread,
+          IntPtr Token
+      );
+
       [DllImport("advapi32.dll", SetLastError=true, CharSet=CharSet.Unicode)]
       public static extern bool CreateProcessAsUser(
           IntPtr hToken,
@@ -256,7 +306,7 @@ namespace Pinvoke {
           ref SECURITY_ATTRIBUTES lpProcessAttributes,
           ref SECURITY_ATTRIBUTES lpThreadAttributes,
           bool bInheritHandles,
-          uint dwCreationFlags,
+          int dwCreationFlags,
           IntPtr lpEnvironment,
           string lpCurrentDirectory,
           ref StartupInfo lpStartupInfo,
@@ -320,6 +370,42 @@ namespace Pinvoke {
 
       [DllImport("kernel32.dll", ExactSpelling = true)]
       public static extern IntPtr GetCurrentProcess();
+
+    public static int LaunchProcessAsToken(string binary, string parameters, bool showUI, IntPtr token, IntPtr envBlock)
+    {
+
+      ProcessInformation pi = new ProcessInformation();
+      SECURITY_ATTRIBUTES saProcess = new SECURITY_ATTRIBUTES();
+      SECURITY_ATTRIBUTES saThread = new SECURITY_ATTRIBUTES();
+      saProcess.nLength = (int)Marshal.SizeOf(saProcess);
+      saThread.nLength = (int)Marshal.SizeOf(saThread);
+
+      StartupInfo si = new StartupInfo();
+      si.cb = (int)Marshal.SizeOf(si);
+
+      si.desktop = @"WinSta0\Default"; //Modify as needed
+      si.flags = 65 ;
+      if (showUI){
+        si.showWindow = 5;
+      }
+      //Set other si properties as required.
+
+      CreateProcessAsUser(
+        token,
+        binary,
+        parameters,
+        ref saProcess,
+        ref saThread,
+        false,
+        1024, // Unicode
+        envBlock,
+        null,
+        ref si,
+        out pi);
+
+      return pi.processId;
+    }
+
   }
 
 }
