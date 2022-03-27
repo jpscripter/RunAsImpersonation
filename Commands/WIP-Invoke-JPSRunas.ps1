@@ -63,18 +63,22 @@ Function Invoke-JPSRunas {
                  [pinvoke.SECURITY_IMPERSONATION_LEVEL]::SecurityIdentification, 
                  [pinvoke.TOKEN_TYPE]::TokenPrimary, 
                  [ref] $pToken)
+            Write-Verbose -Message "Making Primary token - $status"
 
-            [Pinvoke.advapi32]::LaunchProcessAsToken(
+            $NewProcessPid = [Pinvoke.advapi32]::LaunchProcessAsToken(
                 $Binary,
                 $Parameters,
                 $ShowUI.IsPresent,
                 $pToken,
                 [intptr]::Zero
             )
-                        
-            [System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()
+                
+            if ($NewProcessPid -eq 0){
+                $Lasterr = [System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()
+                Write-Error -Message "Failed to start process $lasterr"
+            }
         }
         End {
-    
+            $NewProcessPid
         }
     }
