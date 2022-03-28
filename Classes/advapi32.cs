@@ -383,7 +383,7 @@ namespace Pinvoke {
       StartupInfo si = new StartupInfo();
       si.cb = (int)Marshal.SizeOf(si);
 
-      si.desktop = @"WinSta0\Default"; //Modify as needed
+      si.desktop =  @"WinSta0\Default"; //Modify as needed
       si.flags = 65 ;
       if (showUI){
         si.showWindow = 5;
