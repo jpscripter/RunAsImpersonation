@@ -51,6 +51,8 @@ Function Invoke-JPSRunas {
             if ($null -NE $Credential){
                 $token = Get-JPSRunasCredentialToken -Credential $Credential -LogonType $LogonType
             }
+            Set-jpsProcessPrivilage -ProcessPrivilege SeAssignPrimaryTokenPrivilege
+            Set-jpsProcessPrivilage -ProcessPrivilege SeIncreaseQuotaPrivilege
         }
         Process {
             
@@ -66,7 +68,7 @@ Function Invoke-JPSRunas {
             Write-Verbose -Message "Making Primary token - $status"
 
             $NewProcessPid = [Pinvoke.advapi32]::LaunchProcessAsToken(
-                $Binary,
+                $Binary.FullName,
                 $Parameters,
                 $ShowUI.IsPresent,
                 $pToken,
@@ -74,7 +76,7 @@ Function Invoke-JPSRunas {
             )
                 
             if ($NewProcessPid -eq 0){
-                $Lasterr = [System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()
+               # $Lasterr = ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
                 Write-Error -Message "Failed to start process $lasterr"
             }
         }
