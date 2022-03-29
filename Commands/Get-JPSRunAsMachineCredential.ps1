@@ -31,27 +31,8 @@ http://www.JPScripter.com
           Throw "Run the Command as an Administrator"
         }
 
-        [long]$luid = 0
-
-        $tokPriv1Luid = New-Object Pinvoke.TokPriv1Luid
-        $tokPriv1Luid.Count = 1
-        $tokPriv1Luid.Luid = $luid
-        $tokPriv1Luid.Attr = [Pinvoke.ProcessPrivilegeState]::SE_PRIVILEGE_ENABLED
-
-        $retVal = [Pinvoke.advapi32]::LookupPrivilegeValue($null, "SeDebugPrivilege", [ref]$tokPriv1Luid.Luid)
-
-        [IntPtr]$CurrentToken = 0
-        $retVal = [Pinvoke.advapi32]::OpenProcessToken([Pinvoke.advapi32]::GetCurrentProcess(), [Pinvoke.TokenRights]::TOKEN_ALL_ACCESS, [ref]$CurrentToken)
-  
-  
-        $tokenPrivileges = New-Object Pinvoke.TOKEN_PRIVILEGES
-        $retVal = [Pinvoke.advapi32]::AdjustTokenPrivileges($CurrentToken, $false, [ref]$tokPriv1Luid, 12, [IntPtr]::Zero, [IntPtr]::Zero)
-
-        if(-not($retVal)) {
-        [System.Runtime.InteropServices.marshal]::GetLastWin32Error()
-        Throw "Cannot open current process"
-        }
-
+        Set-jpsProcessPrivilage -ProcessPrivilege SeDebugPrivilege
+        
         $LSAProcess = (Get-Process -Name lsass)
         [IntPtr]$LSAToken = 0
         $retVal = [Pinvoke.advapi32]::OpenProcessToken($LSAProcess.Handle, ([Pinvoke.TokenRights]::TOKEN_IMPERSONATE -BOR [Pinvoke.TokenRights]::TOKEN_DUPLICATE), [ref]$LSAToken)
@@ -126,7 +107,7 @@ http://www.JPScripter.com
             Write-Verbose -message "$i = $currentChar - $b1 - $b2"
         }
 
-        $Credential = [pscredential]::new("$env:USERDNSDOMAIN\$env:COMPUTERNAME", (ConvertTo-SecureString -String $stringBuilder.ToString() -AsPlainText -Force))
+        $Credential = [pscredential]::new("$env:USERDNSDOMAIN\$env:COMPUTERNAME$", (ConvertTo-SecureString -String $stringBuilder.ToString() -AsPlainText -Force))
         $Credential
 
 			

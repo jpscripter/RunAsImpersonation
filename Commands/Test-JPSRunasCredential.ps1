@@ -27,7 +27,7 @@ http://www.JPScripter.com
     Process {
         $username = $Credential.username
         $password = $Credential.GetNetworkCredential().password
-        $Domain = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('Domain', "domain")
+        $Domain = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('Domain')
         $Domain.ValidateCredentials($username, $password)
     }
     End {
