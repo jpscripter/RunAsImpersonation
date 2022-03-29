@@ -104,6 +104,9 @@ namespace Pinvoke {
       CREATE_UNICODE_ENVIRONMENT = 0x00000400,
       CREATE_SEPARATE_WOW_VDM    = 0x00000800,
       CREATE_DEFAULT_ERROR_MODE  = 0x04000000,
+      CREATE_NO_WINDOW = 0x08000000,
+      DETACHED_PROCESS = 0x00000008
+
     }
 
     public enum LogonFlags 
@@ -113,6 +116,14 @@ namespace Pinvoke {
       LOGON_NETCREDENTIALS_ONLY  = 0x00000002    
     }
 
+    //https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/ns-processthreadsapi-startupinfoa
+    public enum StartInfoFlags :int
+    {
+      STARTF_USESHOWWINDOW     = 0x00000001,
+      STARTF_FORCEONFEEDBACK     = 0x00000040,
+      STARTF_RUNFULLSCREEN      = 0x00000020,
+      STARTF_PREVENTPINNING     = 0x00002000
+    }
     public enum TOKEN_TYPE 
     {
         TokenPrimary = 1,
@@ -298,27 +309,13 @@ namespace Pinvoke {
           IntPtr Token
       );
 
-      [DllImport("advapi32.dll", SetLastError=true, CharSet=CharSet.Unicode)]
-      public static extern bool CreateProcessAsUser(
-          IntPtr hToken,
-          string lpApplicationName,
-          string lpCommandLine,
-          ref SECURITY_ATTRIBUTES lpProcessAttributes,
-          ref SECURITY_ATTRIBUTES lpThreadAttributes,
-          bool bInheritHandles,
-          int dwCreationFlags,
-          IntPtr lpEnvironment,
-          string lpCurrentDirectory,
-          ref StartupInfo lpStartupInfo,
-          out ProcessInformation lpProcessInformation);
-
       [DllImport("advapi32", SetLastError = true, CharSet = CharSet.Unicode)]
       public static extern bool CreateProcessWithTokenW(
         IntPtr hToken,
-        LogonFlags dwLogonFlags,
+        int dwLogonFlags,
         string lpApplicationName,
         string lpCommandLine,
-        CreationFlags dwCreationFlags,
+        int dwCreationFlags,
         IntPtr lpEnvironment,
         string lpCurrentDirectory,
         [In] ref StartupInfo lpStartupInfo,
@@ -329,10 +326,10 @@ namespace Pinvoke {
           String             userName,
           String             domain,
           String             password,
-          LogonFlags         logonFlags,
+          int                logonFlags,
           String             applicationName,
           String             commandLine,
-          CreationFlags      creationFlags,
+          int                creationFlags,
           UInt32             environment,
           String             currentDirectory,
           ref  StartupInfo   startupInfo,
@@ -359,7 +356,6 @@ namespace Pinvoke {
       
       [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
 		  public static extern int RevertToSelf();
-    
 
       [DllImport("advapi32.dll", SetLastError = true)]
       public static extern bool LookupPrivilegeValue(
@@ -370,10 +366,8 @@ namespace Pinvoke {
 
       [DllImport("kernel32.dll", ExactSpelling = true)]
       public static extern IntPtr GetCurrentProcess();
-
-    public static int LaunchProcessAsToken(string binary, string parameters, bool showUI, IntPtr token, IntPtr envBlock)
+    public static int LaunchProcessAsToken(string binary, string parameters, bool showUI, int logonFlags, int creationFlags, int startInfoFlags, string desktop, IntPtr token, IntPtr envBlock)
     {
-
       ProcessInformation pi = new ProcessInformation();
       SECURITY_ATTRIBUTES saProcess = new SECURITY_ATTRIBUTES();
       SECURITY_ATTRIBUTES saThread = new SECURITY_ATTRIBUTES();
@@ -383,21 +377,18 @@ namespace Pinvoke {
       StartupInfo si = new StartupInfo();
       si.cb = (int)Marshal.SizeOf(si);
 
-      si.desktop =  @"WinSta0\Default"; //Modify as needed
-      si.flags = 65 ;
+      si.desktop = desktop;
+      si.flags = startInfoFlags ;
       if (showUI){
         si.showWindow = 5;
       }
-      //Set other si properties as required.
 
-      CreateProcessAsUser(
+      CreateProcessWithTokenW(
         token,
+        logonFlags,
         binary,
         parameters,
-        ref saProcess,
-        ref saThread,
-        false,
-        1024, // Unicode
+        creationFlags,
         envBlock,
         null,
         ref si,

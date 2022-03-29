@@ -1,4 +1,4 @@
-Function Invoke-JPSRunas { 
+Function Invoke-JPSRunasToken { 
     <#
     .SYNOPSIS
     Uses a PSCredential object to build a token 
@@ -34,14 +34,14 @@ Function Invoke-JPSRunas {
     
     #>
         param(  
-            [Parameter(Position = 0, Mandatory = $true, ParameterSetName = "Credential")]
-            [PSCredential]$Credential, 
-            [Parameter( ParameterSetName = "Credential")]
-            [Switch]$NetOnly,
             [Parameter(ParameterSetName = "Token")]
             [intptr]$Token = 0,
             [System.IO.FileInfo]$Binary = $env:ComSpec,
             [string]$Parameters,
+            [Pinvoke.LogonFlags] $logonFlag = [Pinvoke.LogonFlags]::DEFAULT,
+            [int] $CreationFlags = ([Pinvoke.CreationFlags]::CREATE_NEW_CONSOLE -bor [Pinvoke.CreationFlags]::CREATE_NEW_PROCESS_GROUP -bor [Pinvoke.CreationFlags]::CREATE_UNICODE_ENVIRONMENT),
+            [int]$StartInfoFlags = ([Pinvoke.StartInfoFlags]::STARTF_USESHOWWINDOW),
+            [string]$Desktop,
             [switch] $ShowUI
 
         )
@@ -67,10 +67,17 @@ Function Invoke-JPSRunas {
                  [ref] $pToken)
             Write-Verbose -Message "Making Primary token - $status"
 
+            $Filename = $Binary.FullName
+            if ($Null -eq $Binary) {$Filename = $null}
+
             $NewProcessPid = [Pinvoke.advapi32]::LaunchProcessAsToken(
                 $Binary.FullName,
                 $Parameters,
                 $ShowUI.IsPresent,
+                $logonFlag,
+                $CreationFlags,
+                $StartInfoFlags,
+                $Desktop,
                 $pToken,
                 [intptr]::Zero
             )
