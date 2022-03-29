@@ -3,6 +3,12 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 
 namespace Pinvoke {
+
+    public enum ProcessPrivilegeState : int
+    {
+        SE_PRIVILEGE_ENABLED = 0x00000002,
+        SE_PRIVILEGE_REMOVED = 0x00000004
+    }
     public enum TokenPrivilege : int
     {
         TOKEN_QUERY = 0x00000008,

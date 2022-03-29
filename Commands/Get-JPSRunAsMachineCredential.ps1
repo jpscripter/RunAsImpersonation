@@ -36,7 +36,7 @@ http://www.JPScripter.com
         $tokPriv1Luid = New-Object Pinvoke.TokPriv1Luid
         $tokPriv1Luid.Count = 1
         $tokPriv1Luid.Luid = $luid
-        $tokPriv1Luid.Attr = [Pinvoke.ProcessPrivilege]::SE_PRIVILEGE_ENABLED
+        $tokPriv1Luid.Attr = [Pinvoke.ProcessPrivilegeState]::SE_PRIVILEGE_ENABLED
 
         $retVal = [Pinvoke.advapi32]::LookupPrivilegeValue($null, "SeDebugPrivilege", [ref]$tokPriv1Luid.Luid)
 
