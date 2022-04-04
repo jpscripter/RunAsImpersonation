@@ -1,4 +1,4 @@
-Function Invoke-JPSRunasToken { 
+Function Invoke-CommandWithToken { 
     <#
     .SYNOPSIS
     Uses a PSCredential object to build a token 
@@ -35,7 +35,7 @@ Function Invoke-JPSRunasToken {
     #>
         param(  
             [Parameter(ParameterSetName = "Token")]
-            [intptr]$Token = 0,
+            [Security.Principal.WindowsIdentity]$Token,
             [System.IO.FileInfo]$Binary = $env:ComSpec,
             [string]$Parameters,
             [Pinvoke.LogonFlags] $logonFlag = [Pinvoke.LogonFlags]::DEFAULT,
@@ -49,7 +49,7 @@ Function Invoke-JPSRunasToken {
             $LogonType = [Pinvoke.dwLogonType]::Interactive
             if ($NetOnly.IsPresent){[Pinvoke.dwLogonType]::NewCredentials}
             if ($null -NE $Credential){
-                $token = Get-JPSRunasCredentialToken -Credential $Credential -LogonType $LogonType
+                $token = Get-CredentialToken -Credential $Credential -LogonType $LogonType
             }
             Set-jpsProcessPrivilage -ProcessPrivilege SeAssignPrimaryTokenPrivilege
             Set-jpsProcessPrivilage -ProcessPrivilege SeIncreaseQuotaPrivilege

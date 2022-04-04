@@ -1,4 +1,4 @@
-Function Get-JPSRunAsMachineToken { 
+Function Get-MachineToken { 
 <#
 .SYNOPSIS
 Opens process for a user and gets token
@@ -11,7 +11,7 @@ Name of the user account you are trying to access.
 
 .EXAMPLE
 PS> 
-$token = Get-JPSRunAsToken 
+$token = Get-Token 
 [System.Security.Principal.WindowsIdentity]::GetCurrent().name
 [System.Security.Principal.WindowsIdentity]::Impersonate($token)
 [System.Security.Principal.WindowsIdentity]::GetCurrent().name
@@ -60,7 +60,7 @@ http://www.JPScripter.com/extension.html
 
         if ($status){
             Write-Verbose -Message "Found Token for system"
-            $ImpersonationToken 
+            Get-TokenInfo -Token $ImpersonationToken 
         }else{
             Throw "Failed to duplicate token"
         }

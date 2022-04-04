@@ -1,4 +1,4 @@
-Function Set-JPSRunAsImpersonation { 
+Function Set-Impersonation { 
 <#
 .SYNOPSIS
 Uses a PSCredential or token and sets the impersonation for the current thread
@@ -17,9 +17,9 @@ Should this PSCredential token be made for net only or local system
 
 .EXAMPLE
 ps> [System.Security.Principal.WindowsIdentity]::GetCurrent().name
-Set-JPSRunAsImpersonation -Credential $Credential
+Set-Impersonation -Credential $Credential
 [System.Security.Principal.WindowsIdentity]::GetCurrent().name
-Set-JPSRunAsImpersonation -token 0
+Set-Impersonation -token 0
 
 
 .LINK
@@ -32,7 +32,7 @@ http://www.JPScripter.com
         [Parameter( ParameterSetName = "Credential")]
         [Switch]$NetOnly,
         [Parameter(ParameterSetName = "Token")]
-        [intptr]$Token = 0
+        [Security.Principle.WindowsIdentity]$Token
     )
     Begin{
 
@@ -41,13 +41,13 @@ http://www.JPScripter.com
         $LogonType = [Pinvoke.dwLogonType]::Interactive
         if ($NetOnly.IsPresent){[Pinvoke.dwLogonType]::NewCredentials}
         if ($null -NE $Credential){
-            $token = Get-JPSRunasCredentialToken -Credential $Credential -LogonType $LogonType
+            $token = Get-CredentialToken -Credential $Credential -LogonType $LogonType
         }
         
-        if ($Token -eq [intptr]::zero){
+        if ($Null -eq $Token){
             $status = [pinvoke.advapi32]::RevertToSelf()
         }else{
-            $status = [pinvoke.advapi32]::ImpersonateLoggedOnUser($Token)
+            $status = [pinvoke.advapi32]::ImpersonateLoggedOnUser($Token.token)
         }
         Write-Verbose -message ("Running as {0}" -f [System.Security.Principal.WindowsIdentity]::GetCurrent().name   )
     }

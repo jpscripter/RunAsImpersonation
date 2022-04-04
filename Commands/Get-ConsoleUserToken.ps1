@@ -1,4 +1,4 @@
-Function Get-JPSRunAsConsoleUserToken { 
+Function Get-ConsoleUserToken { 
 <#
 .SYNOPSIS
 Opens the console session and copies the user token
@@ -12,10 +12,10 @@ override for other sessions
 .EXAMPLE
 PS> 
 [System.Security.Principal.WindowsIdentity]::GetCurrent().name
-$t = Get-JPSRunAsConsoleUserToken
-Set-JPSRunAsImpersonation -Token $t
+$t = Get-ConsoleUserToken
+Set-Impersonation -Token $t
 [System.Security.Principal.WindowsIdentity]::GetCurrent().name
-Set-JPSRunAsImpersonation
+Set-Impersonation
 
 .LINK
 http://www.JPScripter.com/extension.html
@@ -47,10 +47,10 @@ param(
         $Status = [Pinvoke.wtsapi32]::WTSQueryUserToken(1,[ref]$Token)
         if (-not $status){
             Write-Verbose -Message "Trying as system"
-            $SystemToken = Get-JPSRunAsMachineToken
-            Set-JPSRunAsImpersonation -Token $SystemToken
+            $SystemToken = Get-MachineToken
+            Set-Impersonation -Token $SystemToken
             $Status = [Pinvoke.wtsapi32]::WTSQueryUserToken(1,[ref]$Token)
-            Set-JPSRunAsImpersonation
+            Set-Impersonation
         }
         if (-not $status){
             throw "Could not open up Console Token"
@@ -65,7 +65,7 @@ param(
         #return
         if ($status){
             Write-Verbose -Message "Found Token for system"
-            $ImpersonationToken 
+            Get-TokenInfo -Token $ImpersonationToken 
         }else{
             Throw "Failed to duplicate token"
         }

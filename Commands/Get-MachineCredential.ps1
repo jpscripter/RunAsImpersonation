@@ -1,4 +1,4 @@
-Function Get-JPSRunAsMachineCredential { 
+Function Get-MachineCredential { 
 <#
 .SYNOPSIS
 Retrieves the machine password from LSA and makes a PSCredential
@@ -9,7 +9,7 @@ Makes a pscredential object based on the computername and the LSA machine passwo
 .EXAMPLE
 
 
-PS>     $credential = Get-JPSRunAsMachineCredential
+PS>     $credential = Get-MachineCredential
         $ADObject = New-Object -ComObject ADSystemInfo
         $DistintishedPath = $ADObject.gettype().InvokeMember("ComputerName","GetProperty",$null,$ADObject,$null)
         $CompDN = "LDAP://$DistintishedPath"

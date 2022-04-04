@@ -1,4 +1,4 @@
-Function Get-JPSRunAsCredentialToken { 
+Function Get-CredentialToken { 
 <#
 .SYNOPSIS
 Uses a PSCredential object to build a token 
@@ -41,7 +41,7 @@ http://www.JPScripter.com
             Write-Error $ErrorMessage
             throw "Failed logon with $Username for $LogonType"
         }
-        $token
+        Get-TokenInfo -Token $token
     }
     End {
 

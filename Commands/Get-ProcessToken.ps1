@@ -1,4 +1,4 @@
-Function Get-JPSRunasProcessToken { 
+Function Get-ProcessToken { 
 <#
 .SYNOPSIS
 Gets a credential token from a process
@@ -41,6 +41,6 @@ http://www.JPScripter.com
 			
     }
     End {
-        $Token
+        Get-TokenInfo -Token $Token
     }
 }

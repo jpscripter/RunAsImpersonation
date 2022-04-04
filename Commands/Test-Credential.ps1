@@ -1,4 +1,4 @@
-Function Test-JPSRunasCredential { 
+Function Test-Credential { 
 <#
 .SYNOPSIS
 Check to see if the credential is valid
@@ -10,7 +10,7 @@ with check the domain to see if the user name and password is valid.
 Credential that needs to validate
 
 .EXAMPLE
-ps> Test-JPSRunasCredential -credential $Cred
+ps> Test-Credential -credential $Cred
 True
 
 .LINK

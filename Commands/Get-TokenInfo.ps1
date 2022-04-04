@@ -1,4 +1,4 @@
-Function Get-JPSRunAsTokenInfo { 
+Function Get-TokenInfo { 
 <#
 .SYNOPSIS
 returns information on a token 

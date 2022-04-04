@@ -1,4 +1,4 @@
-Function Invoke-JPSRunasScriptBlock { 
+Function Invoke-ScriptBlock { 
     <#
     .SYNOPSIS
     Uses a PSCredential object to build a token 
@@ -19,7 +19,7 @@ Function Invoke-JPSRunasScriptBlock {
     What code block should be run
     
     .EXAMPLE
-    PS> Invoke-JPSRunasScriptBlock -Credential $credential -ScriptBlock {param($text) Write-output "$text-$([System.Security.Principal.WindowsIdentity]::GetCurrent().name)"} -Parameters @{text='param'}
+    PS> Invoke-ScriptBlock -Credential $credential -ScriptBlock {param($text) Write-output "$text-$([System.Security.Principal.WindowsIdentity]::GetCurrent().name)"} -Parameters @{text='param'}
     
     param-LAPTOP\Administrator
     
@@ -34,7 +34,7 @@ Function Invoke-JPSRunasScriptBlock {
             [Parameter( ParameterSetName = "Credential")]
             [Switch]$NetOnly,
             [Parameter(ParameterSetName = "Token")]
-            [intptr]$Token = 0,
+            [Security.Principal.WindowsIdentity]$Token = 0,
             [scriptblock]$ScriptBlock,
             [hashtable]$Parameters
         )
@@ -42,7 +42,7 @@ Function Invoke-JPSRunasScriptBlock {
             $LogonType = [Pinvoke.dwLogonType]::Interactive
             if ($NetOnly.IsPresent){[Pinvoke.dwLogonType]::NewCredentials}
             if ($null -NE $Credential){
-                $token = Get-JPSRunasCredentialToken -Credential $Credential -LogonType $LogonType
+                $token = Get-CredentialToken -Credential $Credential -LogonType $LogonType
             }
         }
         Process {
