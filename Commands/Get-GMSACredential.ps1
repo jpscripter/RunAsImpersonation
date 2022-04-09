@@ -13,10 +13,11 @@ Function Get-GMSACredential{
     Domain logon name of the account
 
     .EXAMPLE
-    Get-GMSACredential -GMSAName 'gmsaUser' 
+    Get-GMSACredential Identity 'gmsaUser' 
     
     .NOTES
-    .Author: Ryan Ephgrave
+    .Author: Ryan Ephgrave and Jeff Scripter
+
     #>
     Param(
         [Parameter(Mandatory=$true)]
@@ -26,7 +27,6 @@ Function Get-GMSACredential{
     )
 
     $DirectoryEntry = New-Object System.DirectoryServices.DirectoryEntry
-
     $searcher = New-Object System.DirectoryServices.DirectorySearcher -ArgumentList $DirectoryEntry
     
     $searcher.Filter = "(&(name=$($Identity))(ObjectCategory=msDS-GroupManagedServiceAccount))"
