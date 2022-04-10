@@ -10,12 +10,7 @@ retrieves and impersionation token based on the logon credentials for the consol
 override for other sessions
 
 .EXAMPLE
-PS> 
-[System.Security.Principal.WindowsIdentity]::GetCurrent().name
-$t = Get-ConsoleUserToken
-Set-Impersonation -Token $t
-[System.Security.Principal.WindowsIdentity]::GetCurrent().name
-Set-Impersonation
+PS>  Get-ConsoleUserToken 
 
 .LINK
 http://www.JPScripter.com/extension.html
@@ -26,49 +21,35 @@ param(
 )
     Begin{
         #Check for admin
-        $currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent())
-        if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -ne $true) {
+        if(-not (Test-LocalAdmin)) {
           Throw "Run the Command as an Administrator"
         }
     }
     Process {
         #get session
         if ($Session -eq 0){
-            $ConsoleSession = [Pinvoke.kernel32]::WTSGetActiveConsoleSessionId()
-        }else{
-            $ConsoleSession = $Session
+            $Session = [Pinvoke.kernel32]::WTSGetActiveConsoleSessionId()
         }
-        if ($null -eq $ConsoleSession){
-            throw "No Logged on Console"
+        if ($null -eq $Session){
+            throw "Session Not Found"
         }
 
         # get console token
+        #must be running within the context of the LocalSystem account and have the SeTcbPrivilege privilege
+        $SystemToken = Get-MachineToken
+        Set-Impersonation -Token $SystemToken
+        Set-ProcessPrivilage -ProcessPrivilege SeTcbPrivilege
         [intptr]$Token = 0
-        $Status = [Pinvoke.wtsapi32]::WTSQueryUserToken(1,[ref]$Token)
-        if (-not $status){
-            Write-Verbose -Message "Trying as system"
-            $SystemToken = Get-MachineToken
-            Set-Impersonation -Token $SystemToken
-            $Status = [Pinvoke.wtsapi32]::WTSQueryUserToken(1,[ref]$Token)
-            Set-Impersonation
-        }
+        $Status = [Pinvoke.wtsapi32]::WTSQueryUserToken($Session,[ref]$Token)
+        Set-Impersonation
+        
         if (-not $status){
             throw "Could not open up Console Token"
         }
 
         #impersonate the token
-        [intptr] $ImpersonationToken = 0
-        $SecurityAttibutes = New-object pinvoke.SECURITY_ATTRIBUTES
-        $SecurityAttibutes.nLength = [System.Runtime.InteropServices.Marshal]::SizeOf($SecurityAttibutes)
-        $status = [Pinvoke.advapi32]::DuplicateTokenEx($Token, [System.Security.Principal.TokenAccessLevels]::MaximumAllowed, [ref] $SecurityAttibutes, [pinvoke.SECURITY_IMPERSONATION_LEVEL]::SecurityImpersonation, [pinvoke.TOKEN_TYPE]::TokenImpersonation, [ref] $ImpersonationToken)
+        Get-DuplicateToken -Token $Token 
 
-        #return
-        if ($status){
-            Write-Verbose -Message "Found Token for system"
-            Get-TokenInfo -Token $ImpersonationToken 
-        }else{
-            Throw "Failed to duplicate token"
-        }
     }
     End {
 

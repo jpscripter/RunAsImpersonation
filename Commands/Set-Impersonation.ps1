@@ -32,7 +32,7 @@ http://www.JPScripter.com
         [Parameter( ParameterSetName = "Credential")]
         [Switch]$NetOnly,
         [Parameter(ParameterSetName = "Token")]
-        [Security.Principle.WindowsIdentity]$Token
+        [System.Security.Principal.WindowsIdentity]$Token
     )
     Begin{
 

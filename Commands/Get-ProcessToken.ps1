@@ -10,6 +10,7 @@ Creates an impersonation token based on a target process
 The process id of the process you want to copy the token from. 
 
 .EXAMPLE
+Get-Process -ID $ProcessID
 
 PS>    
 
@@ -18,29 +19,20 @@ http://www.JPScripter.com
 
 #>
     param(  
-        [int]$ProcessID
+        [int]$ID,
+        [security.principal.tokenaccesslevels]$TokenRights =  [security.principal.tokenaccesslevels]::MaximumAllowed
     )
-    Begin{
-         #Check for admin
-        $currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent())
-        if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -ne $true) {
-          Throw "Run the Command as an Administrator"
-        }
 
+    $Process = (Get-Process -id $ID -IncludeUserName)
+    if ($Null -eq $Process){
+        Throw "Cannot open process - $ProcessID"
     }
-    Process {
 
-        [IntPtr]$Token = 0
-        $Process = Get-Process -ID $ProcessID
-        $retVal = [Pinvoke.advapi32]::OpenProcessToken($Process.Handle, [Pinvoke.TokenRights]::TOKEN_ALL_ACCESS, [ref]$Token)
-  
-        if(-not($retVal)) {
-            [System.Runtime.InteropServices.marshal]::GetLastWin32Error()
-            Throw "Cannot open process - $ProcessID"
-        }
-			
+    [IntPtr]$Token = 0
+    $retVal = [Pinvoke.advapi32]::OpenProcessToken($Process.Handle, $TokenRights, [ref]$Token)
+    if(-not($retVal)) {
+        [System.ComponentModel.Win32Exception][System.Runtime.InteropServices.marshal]::GetLastWin32Error()
+        Throw "Cannot open token - $ProcessID"
     }
-    End {
-        Get-TokenInfo -Token $Token
-    }
+    Get-DuplicateToken -Token $token -TokenAccess $TokenRights -ImpersionationLevel SecurityImpersonation -TokenType TokenImpersonation -returnPointer
 }

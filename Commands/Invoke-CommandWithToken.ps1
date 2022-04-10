@@ -51,20 +51,12 @@ Function Invoke-CommandWithToken {
             if ($null -NE $Credential){
                 $token = Get-CredentialToken -Credential $Credential -LogonType $LogonType
             }
-            Set-jpsProcessPrivilage -ProcessPrivilege SeAssignPrimaryTokenPrivilege
-            Set-jpsProcessPrivilage -ProcessPrivilege SeIncreaseQuotaPrivilege
+            Set-ProcessPrivilage -ProcessPrivilege SeAssignPrimaryTokenPrivilege
+            Set-ProcessPrivilage -ProcessPrivilege SeIncreaseQuotaPrivilege
         }
         Process {
             
-            [intptr] $pToken = 0
-            $SecurityAttibutes = New-object pinvoke.SECURITY_ATTRIBUTES
-            $SecurityAttibutes.nLength = [System.Runtime.InteropServices.Marshal]::SizeOf($SecurityAttibutes)
-            $status = [Pinvoke.advapi32]::DuplicateTokenEx($Token,
-                 [System.Security.Principal.TokenAccessLevels]::MaximumAllowed, 
-                 [ref] $SecurityAttibutes, 
-                 [pinvoke.SECURITY_IMPERSONATION_LEVEL]::SecurityIdentification, 
-                 [pinvoke.TOKEN_TYPE]::TokenPrimary, 
-                 [ref] $pToken)
+            $pToken = Get-DuplicateToken -Token $token.Token -TokenType TokenPrimary
             Write-Verbose -Message "Making Primary token - $status"
 
             $Filename = $Binary.FullName
@@ -78,12 +70,12 @@ Function Invoke-CommandWithToken {
                 $CreationFlags,
                 $StartInfoFlags,
                 $Desktop,
-                $pToken,
+                $pToken.Token,
                 [intptr]::Zero
             )
                 
             if ($NewProcessPid -eq 0){
-               # $Lasterr = ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
+                $Lasterr = ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
                 Write-Error -Message "Failed to start process $lasterr"
             }
         }

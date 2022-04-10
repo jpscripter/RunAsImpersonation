@@ -26,9 +26,8 @@ http://www.JPScripter.com
     )
     Begin{
          #Check for admin
-        $currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent())
-        if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -ne $true) {
-          Throw "Run the Command as an Administrator"
+        if(-not (Test-LocalAdmin)) {
+            Throw "Run the Command as an Administrator"
         }
 
     }

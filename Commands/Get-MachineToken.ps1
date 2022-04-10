@@ -27,44 +27,31 @@ http://www.JPScripter.com/extension.html
     )
     Begin{
         #Check for admin
-        $currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent())
-        if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -ne $true) {
-          Throw "Run the Command as an Administrator"
+        if(-not (Test-LocalAdmin)) {
+            Throw "Run the Command as an Administrator"
         }
     }
     Process {
-   
         # get system Token
         foreach ($process in (Get-process -IncludeUserName)){
-            if ($process.UserName -eq $Username){
-            [intptr] $ProcessToken = 0
+            if ($process.UserName -like '*System*'){
                 Try {
-                    $status = [Pinvoke.advapi32]::OpenProcessToken($process.handle, [security.principal.tokenaccesslevels]::Duplicate,[ref]$ProcessToken)
-                    Write-Verbose -Message "Found token in $($process.Name) - $($process.id) - $($Process.UserName)"
-                    break
+                    Write-Verbose -Message "Trying for $($process.Name) - $($process.id) - $($Process.UserName)"
+                    $ProcessToken = Get-ProcessToken -ID $Process.id 
+                    if ($ProcessToken){Break}
                 }
                 Catch{
-                    $status = $false
+                    #$_
                 }
+
             }
         }
-        if (-not $status){
+        if (-not $ProcessToken){
             Throw "Could not find Process with accessable token for $username"
         }
-
-        # duplicate token
-        [intptr] $ImpersonationToken = 0
-        $SecurityAttibutes = New-object pinvoke.SECURITY_ATTRIBUTES
-        $SecurityAttibutes.nLength = [System.Runtime.InteropServices.Marshal]::SizeOf($SecurityAttibutes)
-        $status = [Pinvoke.advapi32]::DuplicateTokenEx($ProcessToken, [System.Security.Principal.TokenAccessLevels]::MaximumAllowed, [ref] $SecurityAttibutes, [pinvoke.SECURITY_IMPERSONATION_LEVEL]::SecurityImpersonation, [pinvoke.TOKEN_TYPE]::TokenImpersonation, [ref] $ImpersonationToken)
-
-        if ($status){
-            Write-Verbose -Message "Found Token for system"
-            Get-TokenInfo -Token $ImpersonationToken 
-        }else{
-            Throw "Failed to duplicate token"
-        }
-        
+        Set-Impersonation -Token $ProcessToken
+        Get-TokenInfo -Token $ProcessToken
+        Set-Impersonation
     }
     End {
 

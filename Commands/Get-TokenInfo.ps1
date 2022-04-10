@@ -1,7 +1,7 @@
 Function Get-TokenInfo { 
 <#
 .SYNOPSIS
-returns information on a token 
+returns information on a token or the current thread's token
 
 .DESCRIPTION
 returns basic token information
@@ -24,7 +24,11 @@ http://www.JPScripter.com
 
     }
     Process {
-        [System.Security.Principal.WindowsIdentity]::new($Token)
+        if ($Null -eq $token ){
+            [System.Security.Principal.WindowsIdentity]::GetCurrent()
+        }Else{
+            [System.Security.Principal.WindowsIdentity]::new($Token)
+        }
     }
     End {
 

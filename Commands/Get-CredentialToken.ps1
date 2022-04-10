@@ -13,8 +13,8 @@ Credential to log in with
 How this credential will log in (Default is NetOnly but Interactive is also common)
 
 .EXAMPLE
-PS> 
-
+PS> $Cred = Get-Credential
+Get-CredentialToken -Credential $Cred
 
 .LINK
 http://www.JPScripter.com
@@ -22,28 +22,22 @@ http://www.JPScripter.com
 #>
     param(  
         [PSCredential]$Credential ,
-        [Pinvoke.dwLogonType] $LogonType = [Pinvoke.dwLogonType]::NewCredentials
-    )
-    Begin{
-
-    }
-    Process {
-        $Username = $Credential.GetNetworkCredential().username
-        $Password = $Credential.GetNetworkCredential().Password
-        $Domain   = $Credential.GetNetworkCredential().Domain
+        [Pinvoke.dwLogonType] $LogonType = [Pinvoke.dwLogonType]::NewCredentials,
         $LogonProvider = 0
+    )
 
-        [System.IntPtr]$token = 0
-        $status = [Pinvoke.advapi32]::LogonUserEx($Username,$domain, $Password, $LogonType, $LogonProvider, [ref]$token, 0, 0,0,0)
+    $Username = $Credential.GetNetworkCredential().username
+    $Password = $Credential.GetNetworkCredential().Password
+    $Domain   = $Credential.GetNetworkCredential().Domain
 
-        if (-not $status){
-            $ErrorMessage = [System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
-            Write-Error $ErrorMessage
-            throw "Failed logon with $Username for $LogonType"
-        }
-        Get-TokenInfo -Token $token
+    [System.IntPtr]$token = 0
+    $status = [Pinvoke.advapi32]::LogonUserEx($Username,$domain, $Password, $LogonType, $LogonProvider, [ref]$token, 0, 0,0,0)
+
+    if (-not $status){
+        $ErrorMessage = [System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+        Write-Error $ErrorMessage
+        throw "Failed logon with $Username for $LogonType"
     }
-    End {
+    Get-TokenInfo -Token $token
 
-    }
 }
