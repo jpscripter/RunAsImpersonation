@@ -29,13 +29,16 @@ http://www.JPScripter.com
     #Setting LSA Permissions
     Set-ProcessPrivilage -ProcessPrivilege SeDebugPrivilege
     $LSAProcess = (Get-Process -Name lsass)
-    $LSAToken = Get-ProcessToken -ProcessID $LSAProcess.ID
+    $LSAToken = Get-ProcessToken -ID $LSAProcess.ID
     $DupToken = Get-DuplicateToken -Token $LSAToken
     Set-Impersonation -Token $DupToken 
 
     #Dupliate LSA Key
     $MachineKey = '$MACHINE.ACC'
     $Key = 'LSA1'
+    If (-not (Test-Path -Path  HKLM:\SECURITY\Policy\Secrets\$MachineKey)){
+        Throw 'Machine account Password doesnt exist. Please join to a domain.'
+    }
     Remove-Item HKLM:\SECURITY\Policy\Secrets\$Key -force -recurse -ErrorAction Ignore
     $Null = New-Item HKLM:\SECURITY\Policy\Secrets\LSA1 -ItemType Directory
     $values = 'CurrVal','OldVal','OupdTime','CupdTime','SecDesc'
@@ -96,7 +99,7 @@ http://www.JPScripter.com
         $currentChar = [System.BitConverter]::ToChar(($b1,$b2),0)
         if($currentChar -eq [char]::MinValue) { break; }
         [void]$stringBuilder.Append($currentChar)
-        Write-Verbose -message "$i = $currentChar - $b1 - $b2"
+        #Write-Verbose -message "$i = $currentChar - $b1 - $b2"
     }
 
     $Credential = [pscredential]::new("$env:USERDOMAIN\$env:COMPUTERNAME$", (ConvertTo-SecureString -String $stringBuilder.ToString() -AsPlainText -Force))

@@ -4,59 +4,76 @@ Function Invoke-CommandWithCredential {
     Uses a PSCredential to start a process 
     
     .DESCRIPTION
-    Uses the PSCredential and win32 apis to log the user in and create a local or network only token
+    Uses the PSCredential and win32 apis to launch a process
     
     .PARAMETER Credential
     Credential to execute the scriptblock as
-    
-    .PARAMETER NetworkOnly
-    what token should be used to run the script block
 
     .PARAMETER Binary
     a hash table of the parameters you want to pass into your scriptblock
     
     .PARAMETER Parameters
-    a hash table of the parameters you want to pass into your scriptblock
+    Parameters to pass the exe
     
-    .PARAMETER ScriptBlock
-    What code block should be run
-    
+    .PARAMETER ShowUI
+    What exe block should be run
+
     .EXAMPLE
-    PS> Invoke-ScriptBlock -Credential $credential -ScriptBlock {param($text) Write-output "$text-$([System.Security.Principal.WindowsIdentity]::GetCurrent().name)"} -Parameters @{text='param'}
-    
-    param-LAPTOP\Administrator
+    PS> 
     
     
     .LINK
     http://www.JPScripter.com
+
     
     #>
         param(  
-            [Parameter(Position = 0, Mandatory = $true, ParameterSetName = "Credential")]
-            [PSCredential]$Credential, 
-            [Switch]$NetOnly,
-            [Security.Principal.WindowsIdentity]$Token = 0,
-            [scriptblock]$ScriptBlock,
-            [hashtable]$Parameters
+            [PSCredential]$Credential,
+            [System.IO.FileInfo]$Binary = $env:ComSpec,
+            [string]$Parameters,
+            [Pinvoke.LogonFlags] $logonFlag = [Pinvoke.LogonFlags]::DEFAULT,
+            [int]$CreationFlags = ([Pinvoke.CreationFlags]::CREATE_NEW_CONSOLE -bor [Pinvoke.CreationFlags]::CREATE_NEW_PROCESS_GROUP -bor [Pinvoke.CreationFlags]::CREATE_UNICODE_ENVIRONMENT),
+            [int]$StartInfoFlags = ([Pinvoke.StartInfoFlags]::STARTF_USESHOWWINDOW),
+            [switch] $ShowUI
+
         )
         Begin{
             $LogonType = [Pinvoke.dwLogonType]::Interactive
             if ($NetOnly.IsPresent){[Pinvoke.dwLogonType]::NewCredentials}
-            if ($null -NE $Credential){
-                $token = Get-CredentialToken -Credential $Credential -LogonType $LogonType
-            }
+
         }
         Process {
-            $ParamHash = [Hashtable]::Synchronized(@{
-                args = $Parameters
-            })
-            [Func[object]] $Func = {
-                [hashtable] $ScriptArgs= $ParamHash['args']
-                . $scriptblock @ScriptArgs
+            $StartInfo = New-Object Pinvoke.StartupInfo
+            $StartInfo.flags = $StartInfoFlags
+            $StartInfo.showWindow = 0
+            if ($ShowUI.IsPresent){
+                $StartInfo.showWindow = 1
             }
-            [System.Security.Principal.WindowsIdentity]::RunImpersonated($token,$func)
+            $StartInfo.cb = [System.Runtime.InteropServices.Marshal]::SizeOf($StartInfo) 
+
+            $ProcessInfo = New-Object Pinvoke.ProcessInformation
+            $CurrentDirectory = (Get-Location).Path
+
+            $Success = [Pinvoke.advapi32]::CreateProcessWithLogonW(
+                $Credential.GetNetworkCredential().UserName,
+                $Credential.GetNetworkCredential().Domain,
+                $Credential.GetNetworkCredential().Password,
+                $logonFlag,
+                $Binary.FullName,
+                $Parameters,
+                $CreationFlags,
+                $Null,
+                $CurrentDirectory,
+                [ref]$StartInfo,
+                [ref]$ProcessInfo
+            )
+                
+            if (-not $Success){
+                $Lasterr = ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
+                Write-Error -Message "Failed to start process $lasterr"
+            }
         }
         End {
-    
+            $ProcessInfo.processId
         }
     }

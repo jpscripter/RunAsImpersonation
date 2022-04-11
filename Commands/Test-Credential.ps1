@@ -25,10 +25,10 @@ http://www.JPScripter.com
         $Null = Add-type -AssemblyName System.DirectoryServices.AccountManagement
     }
     Process {
-        $username = $Credential.username
-        $password = $Credential.GetNetworkCredential().password
-        $Domain = New-Object System.DirectoryServices.AccountManagement.PrincipalContext('Domain')
-        $Domain.ValidateCredentials($username, $password)
+        $Context = [System.DirectoryServices.AccountManagement.ContextType]::Domain
+        $PrincipleContext = New-Object System.DirectoryServices.AccountManagement.PrincipalContext($Context,$Credential.GetNetworkCredential().Domain)
+        $PrincipleContext.ValidateCredentials( $Credential.GetNetworkCredential().username, $Credential.GetNetworkCredential().password,'Negotiate')
+        $null = $PrincipleContext.Dispose()
     }
     End {
 

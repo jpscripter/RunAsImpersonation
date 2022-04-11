@@ -34,7 +34,7 @@ Function Invoke-ScriptBlock {
             [Parameter( ParameterSetName = "Credential")]
             [Switch]$NetOnly,
             [Parameter(ParameterSetName = "Token")]
-            [Security.Principal.WindowsIdentity]$Token = 0,
+            [Security.Principal.WindowsIdentity]$Token = [Security.Principal.WindowsIdentity]::GetCurrent(),
             [scriptblock]$ScriptBlock,
             [hashtable]$Parameters
         )
@@ -53,7 +53,8 @@ Function Invoke-ScriptBlock {
                 [hashtable] $ScriptArgs= $ParamHash['args']
                 . $scriptblock @ScriptArgs
             }
-            [System.Security.Principal.WindowsIdentity]::RunImpersonated($token,$func)
+            $ImpersonationToken = Get-DuplicateToken -Token $token -returnPointer
+            [System.Security.Principal.WindowsIdentity]::RunImpersonated($ImpersonationToken,$func)
         }
         End {
     

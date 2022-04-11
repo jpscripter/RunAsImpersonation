@@ -55,9 +55,10 @@ Function Invoke-CommandWithToken {
             Set-ProcessPrivilage -ProcessPrivilege SeIncreaseQuotaPrivilege
         }
         Process {
-            
-            $pToken = Get-DuplicateToken -Token $token.Token -TokenType TokenPrimary
-            Write-Verbose -Message "Making Primary token - $status"
+            $SecurityAttibutes = New-object pinvoke.SECURITY_ATTRIBUTES
+            $SecurityAttibutes.nLength = [System.Runtime.InteropServices.Marshal]::SizeOf($SecurityAttibutes)
+
+            [intptr] $pToken = Get-DuplicateToken -Token $token.token -TokenType TokenPrimary -TokenAccess MaximumAllowed -ImpersionationLevel SecurityIdentification -returnPointer
 
             $Filename = $Binary.FullName
             if ($Null -eq $Binary) {$Filename = $null}
@@ -70,12 +71,12 @@ Function Invoke-CommandWithToken {
                 $CreationFlags,
                 $StartInfoFlags,
                 $Desktop,
-                $pToken.Token,
+                $pToken,
                 [intptr]::Zero
             )
                 
             if ($NewProcessPid -eq 0){
-                $Lasterr = ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
+               # $Lasterr = ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
                 Write-Error -Message "Failed to start process $lasterr"
             }
         }

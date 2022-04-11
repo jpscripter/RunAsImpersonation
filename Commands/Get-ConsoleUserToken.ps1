@@ -38,7 +38,6 @@ param(
         #must be running within the context of the LocalSystem account and have the SeTcbPrivilege privilege
         $SystemToken = Get-MachineToken
         Set-Impersonation -Token $SystemToken
-        Set-ProcessPrivilage -ProcessPrivilege SeTcbPrivilege
         [intptr]$Token = 0
         $Status = [Pinvoke.wtsapi32]::WTSQueryUserToken($Session,[ref]$Token)
         Set-Impersonation
