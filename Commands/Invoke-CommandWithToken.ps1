@@ -58,7 +58,11 @@ Function Invoke-CommandWithToken {
             $SecurityAttibutes = New-object pinvoke.SECURITY_ATTRIBUTES
             $SecurityAttibutes.nLength = [System.Runtime.InteropServices.Marshal]::SizeOf($SecurityAttibutes)
 
-            [intptr] $pToken = Get-DuplicateToken -Token $token.token -TokenType TokenPrimary -TokenAccess MaximumAllowed -ImpersionationLevel SecurityIdentification -returnPointer
+            [intptr]$pToken = 0
+            $Access = [System.Security.Principal.TokenAccessLevels]::MaximumAllowed
+            $ImpersionationLevel  = [pinvoke.SECURITY_IMPERSONATION_LEVEL]::SecurityIdentification
+            $TokenType = [Pinvoke.TOKEN_TYPE]::TokenPrimary
+            $ptoken = Get-DuplicateToken -Token $token -TokenAccess $Access -ImpersionationLevel $ImpersionationLevel -TokenType $TokenType -returnPointer
 
             $Filename = $Binary.FullName
             if ($Null -eq $Binary) {$Filename = $null}
