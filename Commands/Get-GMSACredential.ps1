@@ -33,9 +33,12 @@ Function Get-GMSACredential{
     #>
     Param(
         [Parameter(Mandatory=$true)]
-        [string]$Identity
+        [string]$Identity,
+        [string]$Domain
     )
-    $Domain = (Get-CimInstance WIN32_ComputerSystem).Domain
+    if ([String]::IsNullOrWhiteSpace($domain)){
+        $Domain = (Get-CimInstance WIN32_ComputerSystem).Domain
+    }
     $DirectoryEntry = New-Object System.DirectoryServices.DirectoryEntry 
     $searcher = New-Object System.DirectoryServices.DirectorySearcher -ArgumentList $DirectoryEntry
     $searcher.Filter = "(&(name=$($Identity))(ObjectCategory=msDS-GroupManagedServiceAccount))"
@@ -102,7 +105,7 @@ Function Get-GMSACredential{
             Write-Verbose -Message "Password Changes in $($QueryInterval.TotalDays)"
 
             $Credential =  ( New-Object PSCredential -ArgumentList @(
-                                    "corp\MyGMSA$",
+                                    "$Domain\$identity$",
                                     (ConvertTo-SecureString $stringBuilder.ToString() -AsPlainText -Force)
                                     ))
             return $Credential
