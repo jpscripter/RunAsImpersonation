@@ -39,7 +39,7 @@ Function Invoke-CommandWithCredential {
         )
         Begin{
             $LogonType = [Pinvoke.dwLogonType]::Interactive
-            if ($NetOnly.IsPresent){[Pinvoke.dwLogonType]::NewCredentials}
+            if ($NetOnly.IsPresent){$LogonType = [Pinvoke.dwLogonType]::NewCredentials}
 
         }
         Process {

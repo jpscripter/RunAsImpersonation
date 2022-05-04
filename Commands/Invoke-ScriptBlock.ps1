@@ -40,7 +40,7 @@ Function Invoke-ScriptBlock {
         )
         Begin{
             $LogonType = [Pinvoke.dwLogonType]::Interactive
-            if ($NetOnly.IsPresent){[Pinvoke.dwLogonType]::NewCredentials}
+            if ($NetOnly.IsPresent){$LogonType = [Pinvoke.dwLogonType]::NewCredentials}
             if ($null -NE $Credential){
                 $token = Get-CredentialToken -Credential $Credential -LogonType $LogonType
             }
