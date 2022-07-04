@@ -37,7 +37,7 @@ param(
             $PtrToken = Get-DuplicateToken -Token $token -returnPointer
         }
         #Get buffer length first
-        [uint]$TokenInfoLength = 0
+        [uint16]$TokenInfoLength = 0
         #always fails the first time but the length gets updated.
         $null = [Pinvoke.advapi32]::GetTokenInformation($PtrToken,$TokenInformationClass,[System.IntPtr]::Zero, $TokenInfoLength, [ref] $TokenInfoLength)
         if ($TokenInfoLength -ne 0){

@@ -9,17 +9,23 @@ if (Test-Path -Path $PSScriptRoot\Classes\){
         $FilePath = "$env:Tmp\Pinvoke.$($cls.BaseName)-$($ModuleInfo.ModuleVersion).dll"
         Remove-Item -path $FilePath -ErrorAction Ignore
         if (Test-Path -Path $FilePath){
-            Add-Type -Path $FilePath -ReferencedAssemblies $references
+            Add-Type -Path $FilePath
         }else{
             Write-Verbose -Message "Compliling Class File: $CLS -with Unsafe"  
             if ($PSVersionTable.PSVersion.Major -lt 6){
                 $cp = New-Object System.CodeDom.Compiler.CompilerParameters
-                $cp.CompilerOptions = '/unsafe'
+                $cp.CompilerOptions = '/unsafe' 
+                $references.ForEach({$cp.ReferencedAssemblies.Add($PSItem)})
+                $cp.OutputAssembly = $FilePath 
                 $Options = @{CompilerParameters =  $cp}
             }else{
-                $Options = @{CompilerOptions =  '/unsafe'}
+                $Options = @{
+                    CompilerOptions =  '/unsafe'
+                    OutputAssembly = $FilePath 
+                    ReferencedAssemblies = $references
+                 }
             }
-            $null = Add-Type -TypeDefinition $Content @Options -ReferencedAssemblies $references -OutputAssembly $FilePath -Passthru
+            $null = Add-Type -TypeDefinition $Content @Options -Passthru
         }
         $references += $FilePath
     }
