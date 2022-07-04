@@ -43,13 +43,13 @@ namespace Pinvoke
         }
 
 
-        public static string GetLogonId(IntPtr token)
+        public static string GetLogonId(IntPtr token, TOKEN_INFORMATION_CLASS info)
         {
             uint TokenInfLength = 0;
             // first call gets length of TokenInformation
-            bool Result = advapi32.GetTokenInformation(token, TOKEN_INFORMATION_CLASS.TokenGroups, IntPtr.Zero, TokenInfLength, out TokenInfLength);
+            bool Result = advapi32.GetTokenInformation(token, info, IntPtr.Zero, TokenInfLength, out TokenInfLength);
             IntPtr TokenInformation = Marshal.AllocHGlobal((int)TokenInfLength);
-            Result = advapi32.GetTokenInformation(token, TOKEN_INFORMATION_CLASS.TokenGroups, TokenInformation, TokenInfLength, out TokenInfLength);
+            Result = advapi32.GetTokenInformation(token, info, TokenInformation, TokenInfLength, out TokenInfLength);
 
             if (!Result)
             {
