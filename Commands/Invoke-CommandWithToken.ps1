@@ -41,7 +41,7 @@ Function Invoke-CommandWithToken {
             [Pinvoke.LogonFlags] $logonFlag = [Pinvoke.LogonFlags]::DEFAULT,
             [int] $CreationFlags = ([Pinvoke.CreationFlags]::CREATE_NEW_CONSOLE -bor [Pinvoke.CreationFlags]::CREATE_NEW_PROCESS_GROUP -bor [Pinvoke.CreationFlags]::CREATE_UNICODE_ENVIRONMENT),
             [int]$StartInfoFlags = ([Pinvoke.StartInfoFlags]::STARTF_USESHOWWINDOW),
-            [string]$Desktop,
+            [string]$Desktop = 'winsta0\\default',
             [switch] $ShowUI
 
         )
@@ -80,7 +80,7 @@ Function Invoke-CommandWithToken {
             )
                 
             if ($NewProcessPid -eq 0){
-               # $Lasterr = ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
+                $Lasterr = ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
                 Write-Error -Message "Failed to start process $lasterr"
             }
         }

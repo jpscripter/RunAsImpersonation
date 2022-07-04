@@ -31,6 +31,8 @@ namespace Pinvoke {
              bool bInheritHandle,
              uint processId
         );
-
+        
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr LocalFree(IntPtr hMem);
     }
 }

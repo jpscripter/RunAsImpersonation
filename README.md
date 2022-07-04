@@ -1,4 +1,4 @@
-# JPSRunas
+# RunAsImpersonation
 This module is a mix of credential tools that can help administrators work around the problems of permissions both locally and remotely. This is done by making\getting and using windows credential tokens to manipulate the credentials needed for authenticating.
 
 
