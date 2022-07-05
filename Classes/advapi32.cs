@@ -399,6 +399,10 @@ namespace Pinvoke {
         public SID_AND_ATTRIBUTES[] Groups;
     };
 
+    public struct TOKEN_ELEVATION {
+      public int TokenIsElevated;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct SID_AND_ATTRIBUTES
     {
@@ -447,13 +451,6 @@ namespace Pinvoke {
       public static extern uint LsaFreeMemory(
         IntPtr buffer
       );
-
-      [DllImport("advapi32.dll", SetLastError = true)]
-      public static extern Boolean SetTokenInformation(
-        IntPtr TokenHandle, 
-        TOKEN_INFORMATION_CLASS TokenInformationClass,
-        ref UInt32 TokenInformation, 
-        UInt32 TokenInformationLength);
 
       [DllImport("advapi32.dll", SetLastError=true)]
       public static extern bool GetTokenInformation(

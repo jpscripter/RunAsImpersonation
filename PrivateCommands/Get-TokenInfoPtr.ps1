@@ -24,6 +24,9 @@ PS>
 .LINK
 http://www.JPScripter.com/extension.html
 
+.NOTES
+https://docs.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-token_statistics
+
 #>
 param(
     [object]$Token,

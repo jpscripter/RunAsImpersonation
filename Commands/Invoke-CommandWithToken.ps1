@@ -67,7 +67,7 @@ Function Invoke-CommandWithToken {
             $Filename = $Binary.FullName
             if ($Null -eq $Binary) {$Filename = $null}
 
-            $NewProcessPid = [Pinvoke.advapi32]::LaunchProcessAsToken(
+            $NewProcessPid = [Pinvoke.Logic]::LaunchProcessAsToken(
                 $Binary.FullName,
                 $Parameters,
                 $ShowUI.IsPresent,

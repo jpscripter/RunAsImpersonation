@@ -77,5 +77,7 @@ namespace Pinvoke
             Marshal.FreeHGlobal(TokenInformation);
             return retVal;
         }
+
+        
     }
 }
