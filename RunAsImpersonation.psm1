@@ -38,3 +38,11 @@ if (Test-Path -Path $PSScriptRoot\Commands\){
 	    . $CMD
     }
 }
+
+if (Test-Path -Path $PSScriptRoot\PrivateCommands\){
+    $Commands = Get-ChildItem -Path $PSScriptRoot\PrivateCommands\*.ps1 -file -Recurse
+    Foreach($CMD in $Commands){
+	    Write-Verbose -Message "Cmdlet File: $CMD"  
+	    . $CMD
+    }
+}

@@ -31,6 +31,5 @@ param(
     }
     $InfoPointer = Get-TokenInfoPtr -Token $PtrToken -TokenInformationClass TokenElevation
     [System.Runtime.InteropServices.Marshal]::PtrToStructure($InfoPointer,[type][Pinvoke.TOKEN_ELEVATION])   
-
-    #[bool][System.Runtime.InteropServices.Marshal]::ReadByte($InfoPointer)
+    [System.Runtime.InteropServices.Marshal]::FreeHGlobal($InfoPointer)
 }

@@ -41,8 +41,8 @@ Function Invoke-CommandWithToken {
             [Pinvoke.LogonFlags] $logonFlag = [Pinvoke.LogonFlags]::DEFAULT,
             [int] $CreationFlags = ([Pinvoke.CreationFlags]::CREATE_NEW_CONSOLE -bor [Pinvoke.CreationFlags]::CREATE_NEW_PROCESS_GROUP -bor [Pinvoke.CreationFlags]::CREATE_UNICODE_ENVIRONMENT),
             [int]$StartInfoFlags = ([Pinvoke.StartInfoFlags]::STARTF_USESHOWWINDOW),
-            [string]$Desktop = 'winsta0\\default',
-            [switch] $ShowUI
+            [string]$Desktop, #= 'winsta0\\default', 
+            [switch] $ShowUI 
 
         )
         Begin{
@@ -66,7 +66,7 @@ Function Invoke-CommandWithToken {
 
             $Filename = $Binary.FullName
             if ($Null -eq $Binary) {$Filename = $null}
-
+            
             $NewProcessPid = [Pinvoke.Logic]::LaunchProcessAsToken(
                 $Binary.FullName,
                 $Parameters,

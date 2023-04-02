@@ -1,0 +1,13 @@
+$impToken = Get-DuplicateToken -Token $token -TokenAccess MaximumAllowed -TokenType TokenImpersonation -returnPointer
+$PrmToken = Get-DuplicateToken -Token $token -TokenAccess MaximumAllowed -TokenType TokenPrimary -returnPointer
+
+foreach($priv in ([Pinvoke.Process_Privilege].GetEnumNames())){
+    $priv
+    Set-ProcessPrivilage -ProcessPrivilege $priv
+    [Pinvoke.advapi32]::SetTokenInformation($impToken,[Pinvoke.TOKEN_INFORMATION_CLASS]::TokenElevation, $elevationPointer, $size)
+([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetLastWin32Error())
+    [Pinvoke.advapi32]::SetTokenInformation($PrmToken,[Pinvoke.TOKEN_INFORMATION_CLASS]::TokenElevation, $elevationPointer, $size)
+([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetLastWin32Error())
+    [Pinvoke.advapi32]::SetTokenInformation($Token,[Pinvoke.TOKEN_INFORMATION_CLASS]::TokenElevation, $elevationPointer, $size)
+([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetLastWin32Error())
+}

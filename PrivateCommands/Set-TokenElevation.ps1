@@ -29,11 +29,11 @@ param(
     }Else{
         $PtrToken = Get-DuplicateToken -Token $token -returnPointer
     }
-    $elevation = new-object -type Pinvoke.TOKEN_ELEVATION
+    $elevation = Get-Token
     $elevation.TokenIsElevated = $true
     $size = [System.Runtime.InteropServices.Marshal]::SizeOf($elevation)
     $pointer = [System.Runtime.InteropServices.Marshal]::AllocHGlobal($size)
     [System.Runtime.InteropServices.Marshal]::StructureToPtr($elevation,$pointer,$true)
-    [Pinvoke.advapi32]::SetTokenInformation($PtrToken,[Pinvoke.TOKEN_INFORMATION_CLASS]::TokenElevation,$pointer,$size)
+    $success = [Pinvoke.advapi32]::SetTokenInformation($PtrToken,[Pinvoke.TOKEN_INFORMATION_CLASS]::TokenElevation,$pointer,$size)
     ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
 }
