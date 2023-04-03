@@ -402,7 +402,10 @@ namespace Pinvoke {
     public struct TOKEN_ELEVATION {
       public int TokenIsElevated;
     }
-
+    public struct TOKEN_LINKED_TOKEN {
+      public IntPtr LinkedToken;
+    }
+    
     [StructLayout(LayoutKind.Sequential)]
     public struct SID_AND_ATTRIBUTES
     {

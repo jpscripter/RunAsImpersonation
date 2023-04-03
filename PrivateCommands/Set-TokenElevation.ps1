@@ -20,6 +20,10 @@ PS>
 .LINK
 http://www.JPScripter.com/extension.html
 
+.Notes
+
+This approach is blocked by windows and you cant changed the elevation of an existing token. 
+
 #>
 param(
     [object]$Token
@@ -29,11 +33,16 @@ param(
     }Else{
         $PtrToken = Get-DuplicateToken -Token $token -returnPointer
     }
-    $elevation = Get-Token
-    $elevation.TokenIsElevated = $true
-    $size = [System.Runtime.InteropServices.Marshal]::SizeOf($elevation)
-    $pointer = [System.Runtime.InteropServices.Marshal]::AllocHGlobal($size)
-    [System.Runtime.InteropServices.Marshal]::StructureToPtr($elevation,$pointer,$true)
-    $success = [Pinvoke.advapi32]::SetTokenInformation($PtrToken,[Pinvoke.TOKEN_INFORMATION_CLASS]::TokenElevation,$pointer,$size)
-    ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetHRForLastWin32Error()).message
+
+    $isElecated = Get-TokenElevation -Token $PtrToken
+    $isElecated.TokenIsElevated = $true
+
+    $size = [System.Runtime.InteropServices.Marshal]::SizeOf($isElecated)
+    $elevationPointer = [System.Runtime.InteropServices.Marshal]::AllocHGlobal($size)
+    [System.Runtime.InteropServices.Marshal]::StructureToPtr($isElecated,$elevationPointer,$true)
+
+    $success = [Pinvoke.advapi32]::SetTokenInformation($PtrToken,[Pinvoke.TOKEN_INFORMATION_CLASS]::TokenElevation, $elevationPointer, $size)
+    if (!$success){
+        ([System.ComponentModel.Win32Exception][System.Runtime.InteropServices.Marshal]::GetLastWin32Error()).message
+    }
 }
