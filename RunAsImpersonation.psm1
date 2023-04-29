@@ -6,9 +6,13 @@ if (Test-Path -Path $PSScriptRoot\Classes\){
     Foreach($CLS in $Class){
 	    Write-Verbose -Message "Class File: $CLS"  
 	    $Content = Get-Content -raw -path $CLS
+        $LocalFilePath = "$PSScriptRoot\Classes\Pinvoke.$($cls.BaseName)-$($ModuleInfo.ModuleVersion).dll"
         $FilePath = "$env:Tmp\Pinvoke.$($cls.BaseName)-$($ModuleInfo.ModuleVersion).dll"
         Remove-Item -path $FilePath -ErrorAction Ignore
-        if (Test-Path -Path $FilePath){
+        if (Test-Path -Path $LocalFilePath){
+            Add-Type -Path $LocalFilePath
+        }elseif(Test-Path -Path $FilePath)
+        {
             Add-Type -Path $FilePath
         }else{
             Write-Verbose -Message "Compliling Class File: $CLS -with Unsafe"  
